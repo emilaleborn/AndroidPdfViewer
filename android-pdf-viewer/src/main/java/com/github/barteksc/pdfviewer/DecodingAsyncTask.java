@@ -19,7 +19,7 @@ import android.graphics.pdf.PdfRenderer;
 import android.os.AsyncTask;
 
 import com.github.barteksc.pdfviewer.source.DocumentSource;
-import com.github.barteksc.pdfviewer.util.Size;
+import com.github.barteksc.pdfviewer.model.Size;
 
 import java.lang.ref.WeakReference;
 

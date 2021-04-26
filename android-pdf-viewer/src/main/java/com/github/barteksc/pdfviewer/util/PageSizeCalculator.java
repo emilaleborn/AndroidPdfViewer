@@ -15,6 +15,9 @@
  */
 package com.github.barteksc.pdfviewer.util;
 
+import com.github.barteksc.pdfviewer.model.Size;
+import com.github.barteksc.pdfviewer.model.SizeF;
+
 public class PageSizeCalculator {
 
     private FitPolicy fitPolicy;

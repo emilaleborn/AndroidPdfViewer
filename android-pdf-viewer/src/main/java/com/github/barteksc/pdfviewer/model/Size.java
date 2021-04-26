@@ -1,20 +1,19 @@
-package com.github.barteksc.pdfviewer.util;
+package com.github.barteksc.pdfviewer.model;
 
+public class Size {
+    private final int width;
+    private final int height;
 
-public class SizeF {
-    private final float width;
-    private final float height;
-
-    public SizeF(float width, float height) {
+    public Size(int width, int height) {
         this.width = width;
         this.height = height;
     }
 
-    public float getWidth() {
+    public int getWidth() {
         return width;
     }
 
-    public float getHeight() {
+    public int getHeight() {
         return height;
     }
 
@@ -26,8 +25,8 @@ public class SizeF {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof SizeF) {
-            final SizeF other = (SizeF) obj;
+        if (obj instanceof Size) {
+            Size other = (Size) obj;
             return width == other.width && height == other.height;
         }
         return false;
@@ -40,10 +39,7 @@ public class SizeF {
 
     @Override
     public int hashCode() {
-        return Float.floatToIntBits(width) ^ Float.floatToIntBits(height);
-    }
-
-    public Size toSize() {
-        return new Size((int) width, (int) height);
+        // assuming most sizes are <2^16, doing a rotate will give us perfect hashing
+        return height ^ ((width << (Integer.SIZE / 2)) | (width >>> (Integer.SIZE / 2)));
     }
 }

@@ -23,8 +23,8 @@ import android.graphics.pdf.PdfRenderer;
 import com.github.barteksc.pdfviewer.exception.PageRenderingException;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.github.barteksc.pdfviewer.util.PageSizeCalculator;
-import com.github.barteksc.pdfviewer.util.Size;
-import com.github.barteksc.pdfviewer.util.SizeF;
+import com.github.barteksc.pdfviewer.model.Size;
+import com.github.barteksc.pdfviewer.model.SizeF;
 
 import java.util.ArrayList;
 import java.util.List;

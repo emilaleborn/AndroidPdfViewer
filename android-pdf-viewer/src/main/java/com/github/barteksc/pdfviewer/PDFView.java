@@ -58,8 +58,8 @@ import com.github.barteksc.pdfviewer.source.UriSource;
 import com.github.barteksc.pdfviewer.util.Constants;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.github.barteksc.pdfviewer.util.MathUtils;
-import com.github.barteksc.pdfviewer.util.Size;
-import com.github.barteksc.pdfviewer.util.SizeF;
+import com.github.barteksc.pdfviewer.model.Size;
+import com.github.barteksc.pdfviewer.model.SizeF;
 import com.github.barteksc.pdfviewer.util.SnapEdge;
 import com.github.barteksc.pdfviewer.util.Util;
 
