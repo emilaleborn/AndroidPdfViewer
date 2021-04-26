@@ -16,9 +16,7 @@
 package com.github.barteksc.pdfviewer.source;
 
 import android.content.Context;
-
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
+import android.graphics.pdf.PdfRenderer;
 
 import java.io.IOException;
 
@@ -31,7 +29,7 @@ public class ByteArraySource implements DocumentSource {
     }
 
     @Override
-    public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        return core.newDocument(data, password);
+    public PdfRenderer createRenderer(Context context) throws IOException {
+        throw new RuntimeException("Not implemented");
     }
 }

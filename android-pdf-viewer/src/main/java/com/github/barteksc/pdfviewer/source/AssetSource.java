@@ -17,14 +17,16 @@ package com.github.barteksc.pdfviewer.source;
 
 
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
-
-import com.github.barteksc.pdfviewer.util.FileUtils;
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
+import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class AssetSource implements DocumentSource {
 
@@ -35,9 +37,35 @@ public class AssetSource implements DocumentSource {
     }
 
     @Override
-    public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        File f = FileUtils.fileFromAsset(context, assetName);
-        ParcelFileDescriptor pfd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY);
-        return core.newDocument(pfd, password);
+    public PdfRenderer createRenderer(Context context) throws IOException {
+        File file = copyToFile(context);
+        return new PdfRenderer(ParcelFileDescriptor.open(file,ParcelFileDescriptor.MODE_READ_ONLY));
+    }
+
+    private File copyToFile(Context context) {
+        AssetManager assetManager = context.getAssets();
+
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = assetManager.open(assetName);
+            File file = new File(context.getCacheDir(), assetName);
+            out = new FileOutputStream(file);
+
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            in.close();
+            in = null;
+            out.flush();
+            out.close();
+            out = null;
+            return file ;
+        } catch (Exception e) {
+            Log.e("tag", e.getMessage());
+        }
+        return null;
     }
 }

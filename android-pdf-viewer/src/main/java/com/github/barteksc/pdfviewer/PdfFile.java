@@ -16,33 +16,27 @@
 package com.github.barteksc.pdfviewer;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.Rect;
-import android.graphics.RectF;
-import android.util.SparseBooleanArray;
+import android.graphics.pdf.PdfRenderer;
 
 import com.github.barteksc.pdfviewer.exception.PageRenderingException;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.github.barteksc.pdfviewer.util.PageSizeCalculator;
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
-import com.shockwave.pdfium.util.Size;
-import com.shockwave.pdfium.util.SizeF;
+import com.github.barteksc.pdfviewer.util.Size;
+import com.github.barteksc.pdfviewer.util.SizeF;
 
 import java.util.ArrayList;
 import java.util.List;
 
 class PdfFile {
-
-    private static final Object lock = new Object();
-    private PdfDocument pdfDocument;
-    private PdfiumCore pdfiumCore;
+    private final Matrix renderMatrix = new Matrix();
+    private final PdfRenderer pdfRenderer;
     private int pagesCount = 0;
     /** Original page sizes */
     private List<Size> originalPageSizes = new ArrayList<>();
     /** Scaled page sizes */
     private List<SizeF> pageSizes = new ArrayList<>();
-    /** Opened pages with indicator whether opening was successful */
-    private SparseBooleanArray openedPages = new SparseBooleanArray();
     /** Page with maximum width */
     private Size originalMaxWidthPageSize = new Size(0, 0);
     /** Page with maximum height */
@@ -74,11 +68,12 @@ class PdfFile {
      * (ex: 0, 2, 2, 8, 8, 1, 1, 1)
      */
     private int[] originalUserPages;
+    private int currentOpenPageIndex = -1;
+    private PdfRenderer.Page currentOpenPage = null;
 
-    PdfFile(PdfiumCore pdfiumCore, PdfDocument pdfDocument, FitPolicy pageFitPolicy, Size viewSize, int[] originalUserPages,
+    PdfFile(PdfRenderer pdfRenderer,FitPolicy pageFitPolicy, Size viewSize, int[] originalUserPages,
             boolean isVertical, int spacing, boolean autoSpacing, boolean fitEachPage) {
-        this.pdfiumCore = pdfiumCore;
-        this.pdfDocument = pdfDocument;
+        this.pdfRenderer = pdfRenderer;
         this.pageFitPolicy = pageFitPolicy;
         this.originalUserPages = originalUserPages;
         this.isVertical = isVertical;
@@ -92,11 +87,12 @@ class PdfFile {
         if (originalUserPages != null) {
             pagesCount = originalUserPages.length;
         } else {
-            pagesCount = pdfiumCore.getPageCount(pdfDocument);
+
+            pagesCount = pdfRenderer.getPageCount();
         }
 
         for (int i = 0; i < pagesCount; i++) {
-            Size pageSize = pdfiumCore.getPageSize(pdfDocument, documentPage(i));
+            Size pageSize = getPageSize(documentPage(i));
             if (pageSize.getWidth() > originalMaxWidthPageSize.getWidth()) {
                 originalMaxWidthPageSize = pageSize;
             }
@@ -107,6 +103,24 @@ class PdfFile {
         }
 
         recalculatePageSizes(viewSize);
+    }
+
+    private Size getPageSize(int pageIndex) {
+        PdfRenderer.Page page = getPage(pageIndex);
+        return new Size(page.getWidth(), page.getHeight());
+    }
+
+    private PdfRenderer.Page getPage(int pageIndex) {
+        if (currentOpenPageIndex == pageIndex) {
+            return currentOpenPage;
+        }
+        currentOpenPageIndex = -1;
+        if (currentOpenPage != null) {
+            currentOpenPage.close();
+            currentOpenPage = null;
+        }
+        currentOpenPage = pdfRenderer.openPage(pageIndex);
+        return currentOpenPage;
     }
 
     /**
@@ -135,7 +149,7 @@ class PdfFile {
         return pagesCount;
     }
 
-    public SizeF getPageSize(int pageIndex) {
+    public SizeF getPageSizeF(int pageIndex) {
         int docPage = documentPage(pageIndex);
         if (docPage < 0) {
             return new SizeF(0, 0);
@@ -144,7 +158,7 @@ class PdfFile {
     }
 
     public SizeF getScaledPageSize(int pageIndex, float zoom) {
-        SizeF size = getPageSize(pageIndex);
+        SizeF size = getPageSizeF(pageIndex);
         return new SizeF(size.getWidth() * zoom, size.getHeight() * zoom);
     }
 
@@ -222,7 +236,7 @@ class PdfFile {
      * Get the page's height if swiping vertical, or width if swiping horizontal.
      */
     public float getPageLength(int pageIndex, float zoom) {
-        SizeF size = getPageSize(pageIndex);
+        SizeF size = getPageSizeF(pageIndex);
         return (isVertical ? size.getHeight() : size.getWidth()) * zoom;
     }
 
@@ -242,7 +256,7 @@ class PdfFile {
 
     /** Get secondary page offset, that is X for vertical scroll and Y for horizontal scroll */
     public float getSecondaryPageOffset(int pageIndex, float zoom) {
-        SizeF pageSize = getPageSize(pageIndex);
+        SizeF pageSize = getPageSizeF(pageIndex);
         if (isVertical) {
             float maxWidth = getMaxPageWidth();
             return zoom * (maxWidth - pageSize.getWidth()) / 2; //x
@@ -265,68 +279,25 @@ class PdfFile {
     }
 
     public boolean openPage(int pageIndex) throws PageRenderingException {
-        int docPage = documentPage(pageIndex);
-        if (docPage < 0) {
-            return false;
-        }
-
-        synchronized (lock) {
-            if (openedPages.indexOfKey(docPage) < 0) {
-                try {
-                    pdfiumCore.openPage(pdfDocument, docPage);
-                    openedPages.put(docPage, true);
-                    return true;
-                } catch (Exception e) {
-                    openedPages.put(docPage, false);
-                    throw new PageRenderingException(pageIndex, e);
-                }
-            }
-            return false;
-        }
+        return getPage(documentPage(pageIndex)) != null;
     }
 
     public boolean pageHasError(int pageIndex) {
-        int docPage = documentPage(pageIndex);
-        return !openedPages.get(docPage, false);
+        return getPage(documentPage(pageIndex)) == null;
     }
 
     public void renderPageBitmap(Bitmap bitmap, int pageIndex, Rect bounds, boolean annotationRendering) {
-        int docPage = documentPage(pageIndex);
-        pdfiumCore.renderPageBitmap(pdfDocument, bitmap, docPage,
-                bounds.left, bounds.top, bounds.width(), bounds.height(), annotationRendering);
-    }
-
-    public PdfDocument.Meta getMetaData() {
-        if (pdfDocument == null) {
-            return null;
-        }
-        return pdfiumCore.getDocumentMeta(pdfDocument);
-    }
-
-    public List<PdfDocument.Bookmark> getBookmarks() {
-        if (pdfDocument == null) {
-            return new ArrayList<>();
-        }
-        return pdfiumCore.getTableOfContents(pdfDocument);
-    }
-
-    public List<PdfDocument.Link> getPageLinks(int pageIndex) {
-        int docPage = documentPage(pageIndex);
-        return pdfiumCore.getPageLinks(pdfDocument, docPage);
-    }
-
-    public RectF mapRectToDevice(int pageIndex, int startX, int startY, int sizeX, int sizeY,
-                                 RectF rect) {
-        int docPage = documentPage(pageIndex);
-        return pdfiumCore.mapRectToDevice(pdfDocument, docPage, startX, startY, sizeX, sizeY, 0, rect);
+        PdfRenderer.Page page = getPage(documentPage(pageIndex));
+        float scaleX = ((float)bounds.width())/page.getWidth();
+        float scaleY = ((float)bounds.height())/page.getHeight();
+        renderMatrix.reset();
+        renderMatrix.setScale(scaleX, scaleY);
+        renderMatrix.postTranslate(bounds.left, bounds.top);
+        page.render(bitmap, null, renderMatrix, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
     }
 
     public void dispose() {
-        if (pdfiumCore != null && pdfDocument != null) {
-            pdfiumCore.closeDocument(pdfDocument);
-        }
-
-        pdfDocument = null;
+        pdfRenderer.close();
         originalUserPages = null;
     }
 

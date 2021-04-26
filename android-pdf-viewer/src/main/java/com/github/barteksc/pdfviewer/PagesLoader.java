@@ -19,8 +19,8 @@ import android.graphics.RectF;
 
 import com.github.barteksc.pdfviewer.util.Constants;
 import com.github.barteksc.pdfviewer.util.MathUtils;
+import com.github.barteksc.pdfviewer.util.SizeF;
 import com.github.barteksc.pdfviewer.util.Util;
-import com.shockwave.pdfium.util.SizeF;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -97,7 +97,7 @@ class PagesLoader {
     }
 
     private void getPageColsRows(GridSize grid, int pageIndex) {
-        SizeF size = pdfView.pdfFile.getPageSize(pageIndex);
+        SizeF size = pdfView.pdfFile.getPageSizeF(pageIndex);
         float ratioX = 1f / size.getWidth();
         float ratioY = 1f / size.getHeight();
         final float partHeight = (Constants.PART_SIZE * ratioY) / pdfView.getZoom();
@@ -297,7 +297,7 @@ class PagesLoader {
     }
 
     private void loadThumbnail(int page) {
-        SizeF pageSize = pdfView.pdfFile.getPageSize(page);
+        SizeF pageSize = pdfView.pdfFile.getPageSizeF(page);
         float thumbnailWidth = pageSize.getWidth() * Constants.THUMBNAIL_RATIO;
         float thumbnailHeight = pageSize.getHeight() * Constants.THUMBNAIL_RATIO;
         if (!pdfView.cacheManager.containsThumbnail(page, thumbnailRect)) {

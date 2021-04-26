@@ -16,12 +16,11 @@
 package com.github.barteksc.pdfviewer.source;
 
 import android.content.Context;
+import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
 
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
-
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class FileSource implements DocumentSource {
@@ -33,8 +32,14 @@ public class FileSource implements DocumentSource {
     }
 
     @Override
-    public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        ParcelFileDescriptor pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
-        return core.newDocument(pfd, password);
+    public PdfRenderer createRenderer(Context context) throws IOException {
+        try {
+
+            return new PdfRenderer(ParcelFileDescriptor.open(file,ParcelFileDescriptor.MODE_READ_ONLY));
+        }
+        catch (  FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

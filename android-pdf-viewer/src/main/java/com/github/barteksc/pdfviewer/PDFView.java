@@ -37,8 +37,6 @@ import android.util.Log;
 import android.widget.RelativeLayout;
 
 import com.github.barteksc.pdfviewer.exception.PageRenderingException;
-import com.github.barteksc.pdfviewer.link.DefaultLinkHandler;
-import com.github.barteksc.pdfviewer.link.LinkHandler;
 import com.github.barteksc.pdfviewer.listener.Callbacks;
 import com.github.barteksc.pdfviewer.listener.OnDrawListener;
 import com.github.barteksc.pdfviewer.listener.OnErrorListener;
@@ -60,17 +58,14 @@ import com.github.barteksc.pdfviewer.source.UriSource;
 import com.github.barteksc.pdfviewer.util.Constants;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.github.barteksc.pdfviewer.util.MathUtils;
+import com.github.barteksc.pdfviewer.util.Size;
+import com.github.barteksc.pdfviewer.util.SizeF;
 import com.github.barteksc.pdfviewer.util.SnapEdge;
 import com.github.barteksc.pdfviewer.util.Util;
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
-import com.shockwave.pdfium.util.Size;
-import com.shockwave.pdfium.util.SizeF;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -187,9 +182,6 @@ public class PDFView extends RelativeLayout {
 
     private boolean pageSnap = true;
 
-    /** Pdfium core for loading and rendering PDFs */
-    private PdfiumCore pdfiumCore;
-
     private ScrollHandle scrollHandle;
 
     private boolean isScrollHandleInit = false;
@@ -260,7 +252,6 @@ public class PDFView extends RelativeLayout {
         debugPaint = new Paint();
         debugPaint.setStyle(Style.STROKE);
 
-        pdfiumCore = new PdfiumCore(context);
         setWillNotDraw(false);
     }
 
@@ -276,7 +267,7 @@ public class PDFView extends RelativeLayout {
 
         recycled = false;
         // Start decoding document
-        decodingAsyncTask = new DecodingAsyncTask(docSource, password, userPages, this, pdfiumCore);
+        decodingAsyncTask = new DecodingAsyncTask(docSource, password, userPages, this);
         decodingAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
@@ -657,7 +648,7 @@ public class PDFView extends RelativeLayout {
             }
 
             canvas.translate(translateX, translateY);
-            SizeF size = pdfFile.getPageSize(page);
+            SizeF size = pdfFile.getPageSizeF(page);
             listener.onLayerDrawn(canvas,
                     toCurrentScale(size.getWidth()),
                     toCurrentScale(size.getHeight()),
@@ -680,7 +671,7 @@ public class PDFView extends RelativeLayout {
         // Move to the target page
         float localTranslationX = 0;
         float localTranslationY = 0;
-        SizeF size = pdfFile.getPageSize(part.getPage());
+        SizeF size = pdfFile.getPageSizeF(part.getPage());
 
         if (swipeVertical) {
             localTranslationY = pdfFile.getPageOffset(part.getPage(), zoom);
@@ -1074,7 +1065,7 @@ public class PDFView extends RelativeLayout {
             Log.e(TAG, "Cannot fit, document not rendered yet");
             return;
         }
-        zoomTo(getWidth() / pdfFile.getPageSize(page).getWidth());
+        zoomTo(getWidth() / pdfFile.getPageSizeF(page).getWidth());
         jumpTo(page);
     }
 
@@ -1082,7 +1073,7 @@ public class PDFView extends RelativeLayout {
         if (pdfFile == null) {
             return new SizeF(0, 0);
         }
-        return pdfFile.getPageSize(pageIndex);
+        return pdfFile.getPageSizeF(pageIndex);
     }
 
     public int getCurrentPage() {
@@ -1263,30 +1254,6 @@ public class PDFView extends RelativeLayout {
         return renderDuringScale;
     }
 
-    /** Returns null if document is not loaded */
-    public PdfDocument.Meta getDocumentMeta() {
-        if (pdfFile == null) {
-            return null;
-        }
-        return pdfFile.getMetaData();
-    }
-
-    /** Will be empty until document is loaded */
-    public List<PdfDocument.Bookmark> getTableOfContents() {
-        if (pdfFile == null) {
-            return Collections.emptyList();
-        }
-        return pdfFile.getBookmarks();
-    }
-
-    /** Will be empty until document is loaded */
-    public List<PdfDocument.Link> getLinks(int page) {
-        if (pdfFile == null) {
-            return Collections.emptyList();
-        }
-        return pdfFile.getPageLinks(page);
-    }
-
     /** Use an asset file as the pdf source */
     public Configurator fromAsset(String assetName) {
         return new Configurator(new AssetSource(assetName));
@@ -1348,8 +1315,6 @@ public class PDFView extends RelativeLayout {
         private OnLongPressListener onLongPressListener;
 
         private OnPageErrorListener onPageErrorListener;
-
-        private LinkHandler linkHandler = new DefaultLinkHandler(PDFView.this);
 
         private int defaultPage = 0;
 
@@ -1451,11 +1416,6 @@ public class PDFView extends RelativeLayout {
             return this;
         }
 
-        public Configurator linkHandler(LinkHandler linkHandler) {
-            this.linkHandler = linkHandler;
-            return this;
-        }
-
         public Configurator defaultPage(int defaultPage) {
             this.defaultPage = defaultPage;
             return this;
@@ -1537,7 +1497,6 @@ public class PDFView extends RelativeLayout {
             PDFView.this.callbacks.setOnTap(onTapListener);
             PDFView.this.callbacks.setOnLongPress(onLongPressListener);
             PDFView.this.callbacks.setOnPageError(onPageErrorListener);
-            PDFView.this.callbacks.setLinkHandler(linkHandler);
             PDFView.this.setSwipeEnabled(enableSwipe);
             PDFView.this.setNightMode(nightMode);
             PDFView.this.enableDoubletap(enableDoubletap);
