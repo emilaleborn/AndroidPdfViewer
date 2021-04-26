@@ -32,6 +32,7 @@ public class UriSource implements DocumentSource {
 
     @Override
     public PdfRenderer createRenderer(Context context) throws IOException {
-        throw new RuntimeException("Not implemented");
+        ParcelFileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(uri, "r");
+        return new PdfRenderer(fileDescriptor);
     }
 }
