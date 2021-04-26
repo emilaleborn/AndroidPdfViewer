@@ -286,7 +286,7 @@ class PdfFile {
         return getPage(documentPage(pageIndex)) == null;
     }
 
-    public void renderPageBitmap(Bitmap bitmap, int pageIndex, Rect bounds, boolean annotationRendering) {
+    public void renderPageBitmap(Bitmap bitmap, int pageIndex, Rect bounds) {
         PdfRenderer.Page page = getPage(documentPage(pageIndex));
         float scaleX = ((float)bounds.width())/page.getWidth();
         float scaleY = ((float)bounds.height())/page.getHeight();

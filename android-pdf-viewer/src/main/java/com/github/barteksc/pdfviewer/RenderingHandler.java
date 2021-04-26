@@ -16,7 +16,6 @@
 package com.github.barteksc.pdfviewer;
 
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -54,7 +53,7 @@ class RenderingHandler extends Handler {
     }
 
     void addRenderingTask(int page, float width, float height, RectF bounds, boolean thumbnail, int cacheOrder, boolean bestQuality, boolean annotationRendering) {
-        RenderingTask task = new RenderingTask(width, height, bounds, page, thumbnail, cacheOrder, bestQuality, annotationRendering);
+        RenderingTask task = new RenderingTask(width, height, bounds, page, thumbnail, cacheOrder, bestQuality);
         Message msg = obtainMessage(MSG_RENDER_TASK, task);
         sendMessage(msg);
     }
@@ -106,7 +105,7 @@ class RenderingHandler extends Handler {
         }
         calculateBounds(w, h, renderingTask.bounds);
 
-        pdfFile.renderPageBitmap(render, renderingTask.page, roundedRenderBounds, renderingTask.annotationRendering);
+        pdfFile.renderPageBitmap(render, renderingTask.page, roundedRenderBounds);
 
         return new PagePart(renderingTask.page, render,
                 renderingTask.bounds, renderingTask.thumbnail,
@@ -145,9 +144,7 @@ class RenderingHandler extends Handler {
 
         boolean bestQuality;
 
-        boolean annotationRendering;
-
-        RenderingTask(float width, float height, RectF bounds, int page, boolean thumbnail, int cacheOrder, boolean bestQuality, boolean annotationRendering) {
+        RenderingTask(float width, float height, RectF bounds, int page, boolean thumbnail, int cacheOrder, boolean bestQuality) {
             this.page = page;
             this.width = width;
             this.height = height;
@@ -155,7 +152,6 @@ class RenderingHandler extends Handler {
             this.thumbnail = thumbnail;
             this.cacheOrder = cacheOrder;
             this.bestQuality = bestQuality;
-            this.annotationRendering = annotationRendering;
         }
     }
 }
