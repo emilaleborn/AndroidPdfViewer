@@ -17,11 +17,16 @@ package com.github.barteksc.pdfviewer.source;
 
 import android.content.Context;
 import android.graphics.pdf.PdfRenderer;
+import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ByteArraySource implements DocumentSource {
 
+    private static final String TAG = ByteArraySource.class.getName();
     private byte[] data;
 
     public ByteArraySource(byte[] data) {
@@ -30,6 +35,20 @@ public class ByteArraySource implements DocumentSource {
 
     @Override
     public PdfRenderer createRenderer(Context context) throws IOException {
-        throw new RuntimeException("Not implemented");
+        return new PdfRenderer(getFileDescriptor(data));
+    }
+
+    private ParcelFileDescriptor getFileDescriptor(byte[] fileData) throws IOException {
+        ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+        InputStream inputStream = new ByteArrayInputStream(fileData);
+        ParcelFileDescriptor.AutoCloseOutputStream outputStream = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]);
+        int len;
+        while ((len = inputStream.read()) >= 0) {
+            outputStream.write(len);
+        }
+        inputStream.close();
+        outputStream.flush();
+        outputStream.close();
+        return pipe[0];
     }
 }
