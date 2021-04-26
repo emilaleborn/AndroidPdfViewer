@@ -17,6 +17,7 @@ package com.github.barteksc.pdfviewer.source;
 
 import android.content.Context;
 import android.graphics.pdf.PdfRenderer;
+import android.os.ParcelFileDescriptor;
 
 
 import java.io.IOException;
@@ -32,6 +33,15 @@ public class InputStreamSource implements DocumentSource {
 
     @Override
     public PdfRenderer createRenderer(Context context) throws IOException {
-        throw new RuntimeException("Not implemented");
+        ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+        ParcelFileDescriptor.AutoCloseOutputStream outputStream = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]);
+        int len;
+        while ((len = inputStream.read()) >= 0) {
+            outputStream.write(len);
+        }
+        inputStream.close();
+        outputStream.flush();
+        outputStream.close();
+        return new PdfRenderer(pipe[0]);
     }
 }
