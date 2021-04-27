@@ -5,10 +5,12 @@ Library for displaying PDF documents on Android, with `animations`, `gestures`, 
 It uses the build in [PdfRenderer](https://developer.android.com/reference/android/graphics/pdf/PdfRenderer) for decoding PDF files. Works on API 21 (Android 5.0) and higher.
 Licensed under Apache License 2.0.
 
-* Based on [barteksc/AndroidPdfViewer](https://github.com/barteksc/AndroidPdfViewer) but without pdfium to avoid increasing the size of your apk/aab. For better performance and a richer feature set, consider using it instead*  
+**Based on [barteksc/AndroidPdfViewer](https://github.com/barteksc/AndroidPdfViewer) but without pdfium to avoid increasing the size of your apk/aab. For better performance and a richer feature set, consider using it instead**  
 
 
 ## Installation
+
+Note: The library is not yet available in any public repository. Until then, you have to build it on your own. 
 
 Add to _build.gradle_:
 
