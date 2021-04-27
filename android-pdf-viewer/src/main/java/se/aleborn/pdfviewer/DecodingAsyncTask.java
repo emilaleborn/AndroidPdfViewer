@@ -34,12 +34,11 @@ class DecodingAsyncTask extends AsyncTask<Void, Void, Throwable> {
     private int[] userPages;
     private PdfFile pdfFile;
 
-    DecodingAsyncTask(DocumentSource docSource, String password, int[] userPages, PDFView pdfView) {
+    DecodingAsyncTask(DocumentSource docSource, int[] userPages, PDFView pdfView) {
         this.docSource = docSource;
         this.userPages = userPages;
         this.cancelled = false;
         this.pdfViewReference = new WeakReference<>(pdfView);
-        this.password = password;
     }
 
     @Override

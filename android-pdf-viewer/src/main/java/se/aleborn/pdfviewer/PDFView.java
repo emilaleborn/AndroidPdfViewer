@@ -255,11 +255,11 @@ public class PDFView extends RelativeLayout {
         setWillNotDraw(false);
     }
 
-    private void load(DocumentSource docSource, String password) {
-        load(docSource, password, null);
+    private void load(DocumentSource docSource) {
+        load(docSource, null);
     }
 
-    private void load(DocumentSource docSource, String password, int[] userPages) {
+    private void load(DocumentSource docSource, int[] userPages) {
 
         if (!recycled) {
             throw new IllegalStateException("Don't call load on a PDF View without recycling it first.");
@@ -267,7 +267,7 @@ public class PDFView extends RelativeLayout {
 
         recycled = false;
         // Start decoding document
-        decodingAsyncTask = new DecodingAsyncTask(docSource, password, userPages, this);
+        decodingAsyncTask = new DecodingAsyncTask(docSource, userPages, this);
         decodingAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
@@ -1322,8 +1322,6 @@ public class PDFView extends RelativeLayout {
 
         private boolean annotationRendering = false;
 
-        private String password = null;
-
         private ScrollHandle scrollHandle = null;
 
         private boolean antialiasing = true;
@@ -1426,11 +1424,6 @@ public class PDFView extends RelativeLayout {
             return this;
         }
 
-        public Configurator password(String password) {
-            this.password = password;
-            return this;
-        }
-
         public Configurator scrollHandle(ScrollHandle scrollHandle) {
             this.scrollHandle = scrollHandle;
             return this;
@@ -1513,9 +1506,9 @@ public class PDFView extends RelativeLayout {
             PDFView.this.setPageFling(pageFling);
 
             if (pageNumbers != null) {
-                PDFView.this.load(documentSource, password, pageNumbers);
+                PDFView.this.load(documentSource, pageNumbers);
             } else {
-                PDFView.this.load(documentSource, password);
+                PDFView.this.load(documentSource);
             }
         }
     }
