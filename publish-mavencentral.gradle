@@ -1,3 +1,4 @@
+
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
@@ -23,6 +24,10 @@ if (secretPropsFile.exists()) {
     ext["signing.secretKeyRingFile"] = System.getenv('SIGNING_SECRET_KEY_RING_FILE')
     ext["ossrhUsername"] = System.getenv('OSSRH_USERNAME')
     ext["ossrhPassword"] = System.getenv('OSSRH_PASSWORD')
+}
+
+release {
+    //buildTasks = ['clean', 'build']
 }
 
 publishing {
