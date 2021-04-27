@@ -299,6 +299,9 @@ class PdfFile {
     public void dispose() {
         pdfRenderer.close();
         originalUserPages = null;
+        if (currentOpenPage != null) {
+            currentOpenPage.close();
+        }
     }
 
     /**
