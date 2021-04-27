@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.github.barteksc.sample">
+	package="se.aleborn.pdfviewer.sample">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
